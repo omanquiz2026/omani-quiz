@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحدي اللهجة العمانية - جماعي</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#181d2a;color:white;font-family:Tahoma,Arial;text-align:center}header{background:#a32135;padding:20px;border-bottom:5px solid #d7ad59}main{max-width:800px;margin:25px auto;padding:15px}.card{background:#252e40;border:1px solid #bd9854;border-radius:20px;padding:25px}.word{font-size:clamp(36px,8vw,65px);color:#f3ca78;margin:25px 0}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}.answers button{background:#2858a1;color:white;border:0;border-radius:12px;padding:18px 8px;min-height:75px;font-size:17px}.answers button:nth-child(2){background:#9c5928}.answers button:nth-child(3){background:#7452a6}.answers button:nth-child(4){background:#187d85}.action{background:#d7ad59;color:#201b17;border:0;border-radius:12px;padding:15px 24px;font-weight:bold;font-size:18px;margin:16px}input{padding:15px;border-radius:10px;border:1px solid #ccc;font-size:18px;width:100%;max-width:330px}#message{color:#f3ca78;min-height:30px}button:disabled{opacity:.5}
+</style>
+</head>
+<body>
+<header><h1>🇴🇲 تحدّي اللهجة العُمانية 🇴🇲</h1><p>علوم الأولين | من يعرف معنى الكلمة؟</p></header>
+<main>
+<section class="card" id="start"><h2>أهلًا بك في التحدّي!</h2><p>اكتب اسمك للمشاركة</p><input id="player" maxlength="35" placeholder="اسم المشارك" autocomplete="off"><p><button class="action" id="startBtn">ابدأ التحدّي</button></p><p id="startMsg"></p></section>
+<section class="card" id="game" hidden><div id="progress"></div><div class="word" id="word"></div><div class="answers" id="answers"></div><p id="message"></p><button class="action" id="next" hidden>السؤال التالي ←</button><p id="score"></p></section>
+<section class="card" id="finish" hidden><h2>🏆 انتهى التحدّي</h2><p id="result"></p><p id="saveStatus"></p></section>
+<p><small>نسخة تجريبية — لا تُستخدم في المسابقة الرسمية قبل اختبار الحفظ والأمان</small></p>
+</main>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
+import {getAuth,signInAnonymously} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
+import {getFirestore,doc,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+const config={apiKey:'AIzaSyCAKaDzLxGz7s6CVcpM2lkdmQ0HM1_5uI0',authDomain:'omani-quiz-2026.firebaseapp.com',projectId:'omani-quiz-2026',storageBucket:'omani-quiz-2026.firebasestorage.app',messagingSenderId:'33365744481',appId:'1:33365744481:web:ba30017418e073e772c320'};
+const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
+const questions=[
+['مسيفياه',['حشرة تصيب الليمون','أم أربعة وأربعين','صغيرة الماعز','نوع من أواني المطبخ'],1],
+['كعل',['حشرة تصيب النخيل','سطل','نوع من الحلي','القمر'],0],
+['فرجولة',['صغيرة الماعز','حشرة ليلية','صغيرة الدجاجة','أداة للحشائش'],2],
+['قنزوز',['طائر مهاجر','حشرة تصدر صوتًا في السمر','حلية للقدم','وعاء للماء'],1],
+['مجز',['أداة للحشائش','سطل','إناء للطبخ','قطعة من الزي العماني'],0],
+['صخيلة',['صغيرة الدجاجة','نوع من النخيل','صغيرة الماعز','أداة زراعية'],2],
+['غذفه',['حشرة تصيب النخيل','من الزي العماني','أداة زراعية','نوع من الأواني'],1],
+['سحل',['حلية للمرأة','حشرة تصيب الليمون','صغيرة الدجاجة','القمر'],1],
+['سجرجه',['من أواني المطبخ','حشرة ليلية','سطل','نوع من الملابس'],0],
+['الدهديه',['بهدوء','في المساء','بسرعة','من بعيد'],2],
+['الدهيد',['الشمس','النجم','البرق','القمر'],3],
+['لجن',['قطعة قماش','سطل','حشرة','أداة للحشائش'],1],
+['مبدع',['صغير الفقير','سطل','نوع من الحلي','نوع من الطيور'],0],
+['نطل',['حلية تلبسها المرأة في القدم','أداة للحشائش','وعاء للماء','حشرة تصيب النخيل'],0]
+];
+const el=id=>document.getElementById(id);let index=0,score=0,startedAt=0,user=null,name='',locked=false;
+el('startBtn').onclick=async()=>{
+ name=el('player').value.trim();if(name.length<2){el('startMsg').textContent='اكتب اسمًا من حرفين على الأقل';return;}
+ el('startBtn').disabled=true;el('startMsg').textContent='جارٍ تجهيز المشاركة...';
+ try{const credential=await signInAnonymously(auth);user=credential.user;startedAt=Date.now();el('start').hidden=true;el('game').hidden=false;show();}
+ catch(e){el('startMsg').textContent='تعذر تسجيل الدخول. تأكد من الاتصال وإعدادات Firebase.';el('startBtn').disabled=false;console.error(e);}
+};
+function show(){locked=false;let q=questions[index];el('progress').textContent=`السؤال ${index+1} من ${questions.length}`;el('word').textContent=q[0];el('message').textContent='';el('score').textContent=`النقاط: ${score}`;el('next').hidden=true;let box=el('answers');box.replaceChildren();q[1].forEach((a,i)=>{let b=document.createElement('button');b.textContent=a;b.onclick=()=>{if(locked)return;locked=true;for(let btn of box.children)btn.disabled=true;if(i===q[2])score+=1000;el('message').textContent='تم تسجيل إجابتك';el('score').textContent=`النقاط: ${score}`;el('next').hidden=false;};box.appendChild(b);});}
+el('next').onclick=async()=>{index++;if(index<questions.length){show();return;}el('game').hidden=true;el('finish').hidden=false;const seconds=Math.round((Date.now()-startedAt)/1000);el('result').textContent=`${name} — ${score} نقطة من ${questions.length*1000} | الوقت: ${seconds} ثانية`;el('saveStatus').textContent='جارٍ حفظ النتيجة...';try{await setDoc(doc(db,'results',user.uid),{name,score,seconds,completedAt:serverTimestamp(),uid:user.uid});el('saveStatus').textContent='✅ تم إرسال النتيجة';}catch(e){el('saveStatus').textContent='⚠️ لم تُحفظ النتيجة بعد. نحتاج ضبط قواعد Firestore أولًا.';console.error(e);}};
+</script>
+</body></html>
