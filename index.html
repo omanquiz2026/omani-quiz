@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحدي اللهجة العمانية</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#181d2a;color:white;text-align:center}
+header{background:#a32135;padding:22px;border-bottom:5px solid #d7ad59}
+h1{margin:5px;font-size:clamp(26px,5vw,48px)}
+main{max-width:850px;margin:25px auto;padding:15px}
+.card{background:#252e40;border:1px solid #bd9854;border-radius:20px;padding:25px}
+.word{font-size:clamp(38px,8vw,70px);color:#f3ca78;margin:30px 0}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answers button{border:0;border-radius:13px;padding:22px 8px;min-height:90px;font-size:clamp(16px,3vw,23px);color:white;cursor:pointer}
+.answers button:nth-child(4n+1){background:#2858a1}
+.answers button:nth-child(4n+2){background:#9c5928}
+.answers button:nth-child(4n+3){background:#7452a6}
+.answers button:nth-child(4n){background:#187d85}
+.answers button:disabled{opacity:.75}
+button.correct{background:#15834d!important;opacity:1}
+button.wrong{background:#a32c3e!important;opacity:1}
+.action{background:#d7ad59;color:#201b17;border:0;border-radius:12px;padding:16px 28px;font-weight:bold;font-size:19px;margin:20px;cursor:pointer}
+#feedback{font-size:23px;min-height:35px;margin:15px}
+small{color:#c8cbd5}
+</style>
+</head>
+<body>
+<header><h1>🇴🇲 تحدّي اللهجة العُمانية 🇴🇲</h1><p>علوم الأولين | من يعرف معنى الكلمة؟</p></header>
+<main><section class="card">
+<div id="progress">السؤال 1</div>
+<div id="word" class="word"></div>
+<div id="answers" class="answers"></div>
+<div id="feedback"></div>
+<button id="next" class="action" onclick="nextQuestion()" hidden>السؤال التالي ←</button>
+<div id="score"></div>
+</section>
+<p><small>نسخة تجريبية على جهاز واحد — الربط الجماعي قيد الإعداد</small></p>
+</main>
+<script>
+const questions=[
+["مسيفياه",["حشرة تصيب الليمون","أم أربعة وأربعين","صغيرة الماعز","نوع من أواني المطبخ"],1],
+["كعل",["حشرة تصيب النخيل","سطل","نوع من الحلي","القمر"],0],
+["فرجولة",["صغيرة الماعز","حشرة ليلية","صغيرة الدجاجة","أداة للحشائش"],2],
+["قنزوز",["طائر مهاجر","حشرة تصدر صوتًا في السمر","حلية للقدم","وعاء للماء"],1],
+["مجز",["أداة للحشائش","سطل","إناء للطبخ","قطعة من الزي العماني"],0],
+["صخيلة",["صغيرة الدجاجة","نوع من النخيل","صغيرة الماعز","أداة زراعية"],2],
+["غذفه",["حشرة تصيب النخيل","من الزي العماني","أداة زراعية","نوع من الأواني"],1],
+["سحل",["حلية للمرأة","حشرة تصيب الليمون","صغيرة الدجاجة","القمر"],1],
+["سجرجه",["من أواني المطبخ","حشرة ليلية","سطل","نوع من الملابس"],0],
+["الدهديه",["بهدوء","في المساء","بسرعة","من بعيد"],2],
+["الدهيد",["الشمس","النجم","البرق","القمر"],3],
+["لجن",["قطعة قماش","سطل","حشرة","أداة للحشائش"],1],
+["مبدع",["صغير الفقير","سطل","نوع من الحلي","نوع من الطيور"],0],
+["نطل",["حلية تلبسها المرأة في القدم","أداة للحشائش","وعاء للماء","حشرة تصيب النخيل"],0]
+];
+let index=0,score=0;
+function show(){
+const q=questions[index];
+document.getElementById("progress").textContent="السؤال "+(index+1)+" من "+questions.length;
+document.getElementById("word").textContent=q[0];
+document.getElementById("feedback").textContent="";
+document.getElementById("next").hidden=true;
+document.getElementById("score").textContent="النقاط: "+score;
+const box=document.getElementById("answers");box.innerHTML="";
+q[1].forEach((answer,i)=>{
+const b=document.createElement("button");
+b.textContent=answer;
+b.onclick=()=>{
+[...box.children].forEach(x=>x.disabled=true);
+box.children[q[2]].classList.add("correct");
+if(i===q[2]){score+=1000;document.getElementById("feedback").textContent="🎉 إجابة صحيحة!";}
+else{b.classList.add("wrong");document.getElementById("feedback").textContent="الإجابة الصحيحة: "+q[1][q[2]];}
+document.getElementById("score").textContent="النقاط: "+score;
+document.getElementById("next").hidden=false;
+};box.appendChild(b);
+});
+}
+function nextQuestion(){
+index++;
+if(index>=questions.length){
+document.getElementById("progress").textContent="انتهت المسابقة";
+document.getElementById("word").textContent="🏆";
+document.getElementById("answers").innerHTML="";
+document.getElementById("feedback").textContent="مجموع نقاطك: "+score;
+document.getElementById("score").textContent="شكرًا لمشاركتك!";
+const b=document.getElementById("next");b.textContent="العب مرة ثانية";b.hidden=false;b.onclick=()=>location.reload();
+}else show();
+}
+show();
+</script>
+</body>
+</html>
